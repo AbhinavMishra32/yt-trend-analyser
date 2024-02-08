@@ -10,9 +10,10 @@ fetch('video_data.json')
                     const chartContainer = document.createElement('div');
                     chartContainer.classList.add('chart-container');
 
+                    // Include channel age and upload frequency in the chart title
                     const chartTitle = document.createElement('div');
                     chartTitle.classList.add('chart-title');
-                    chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name}`;
+                    chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Age: ${videos[0].channel_age}, Upload Frequency: TBD)`;
 
                     const canvas = document.createElement('canvas');
 
