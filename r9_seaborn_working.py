@@ -19,12 +19,11 @@ NUM_CHANNELS_TO_FETCH = 5  # Limit for the number of channels to fetch
 API_KEY = "AIzaSyAfhdh3raVJa6DYYl6J1An5hSPG2Cgk_uc"
 
 # Fetch order options
-FETCH_ORDER_RANDOM = "random"
 FETCH_ORDER_FIRST_TO_LAST = "first_to_last"
 FETCH_ORDER_LAST_TO_FIRST = "last_to_first"
 
 # Fetch order
-FETCH_ORDER = FETCH_ORDER_RANDOM  # Change this to choose the fetch order
+FETCH_ORDER = FETCH_ORDER_FIRST_TO_LAST  # Change this to choose the fetch order
 
 # Configure logging
 formatter = ColoredFormatter(
@@ -94,12 +93,10 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
         youtube = build("youtube", "v3", developerKey=API_KEY)
 
         # Fetch videos from the channel
-        if FETCH_ORDER == FETCH_ORDER_RANDOM:
-            order = "date"
-        elif FETCH_ORDER == FETCH_ORDER_FIRST_TO_LAST:
+        if FETCH_ORDER == FETCH_ORDER_FIRST_TO_LAST:
             order = "date"
         elif FETCH_ORDER == FETCH_ORDER_LAST_TO_FIRST:
-            order = "date"
+            order = "-date"
         else:
             logger.error("Invalid fetch order specified.")
             return []

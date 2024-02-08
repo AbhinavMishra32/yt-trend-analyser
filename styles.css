@@ -1,0 +1,46 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f8f9fa;
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.chart-container {
+    margin-bottom: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.chart-title {
+    padding: 15px;
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    border-bottom: 2px solid #0056b3;
+    border-radius: 10px 10px 0 0;
+}
+
+.canvas-container {
+    padding: 20px;
+}
+
+.canvas-container canvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}
+
+@media (max-width: 768px) {
+    .chart-container {
+        border-radius: 0;
+    }
+}
