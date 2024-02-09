@@ -48,35 +48,32 @@ logger.addHandler(console)
 logger.setLevel(logging.INFO)
 
 def calculate_channel_age(channel_id):
+    youtube = build("youtube", "v3", developerKey=API_KEY)
+
+    # Fetch channel details
+    request = youtube.channels().list(
+        part="snippet",
+        id=channel_id
+    )
+    response = request.execute()
+
+    # Extract channel creation date
+    creation_date_str = response['items'][0]['snippet']['publishedAt']
+    logger.info("Creation date string: %s", creation_date_str)
+
     try:
-        youtube = build("youtube", "v3", developerKey=API_KEY)
+        # Attempt to parse the datetime string with microseconds
+        creation_date = datetime.datetime.strptime(creation_date_str, "%Y-%m-%dT%H:%M:%S.%fZ").date()
+    except ValueError:
+        # If parsing with microseconds fails, try parsing without microseconds
+        creation_date = datetime.datetime.strptime(creation_date_str[:-5], "%Y-%m-%dT%H:%M:%S").date()
 
-        # Fetch channel details
-        request = youtube.channels().list(
-            part="snippet",
-            id=channel_id
-        )
-        response = request.execute()
+    # Calculate channel age
+    current_date = datetime.date.today()
+    channel_age_days = (current_date - creation_date).days
 
-        # Extract channel creation date
-        creation_date_str = response['items'][0]['snippet']['publishedAt']
-        logger.info("Creation date string: %s", creation_date_str)
+    return channel_age_days
 
-        try:
-            # Attempt to parse the datetime string with microseconds
-            creation_date = datetime.datetime.strptime(creation_date_str, "%Y-%m-%dT%H:%M:%S.%fZ").date()
-        except ValueError:
-            # If parsing with microseconds fails, try parsing without microseconds
-            creation_date = datetime.datetime.strptime(creation_date_str[:-5], "%Y-%m-%dT%H:%M:%S").date()
-
-        # Calculate channel age
-        current_date = datetime.date.today()
-        channel_age_days = (current_date - creation_date).days
-
-        return channel_age_days
-    except Exception as e:
-        logger.error("Error occurred while calculating channel age for channel ID %s: %s", channel_id, str(e))
-        return -1  # Return -1 if unable to calculate channel age
 
 def scrape_youtube_channel_ids():
     logger.info("Scraping YouTube homepage to obtain channel IDs...")
@@ -93,6 +90,9 @@ def scrape_youtube_channel_ids():
 
         # Getting page source
         page_source = driver.page_source
+
+        # Print out the page source for inspection
+        # print(page_source)
 
         # Close the WebDriver
         driver.quit()
@@ -118,8 +118,9 @@ def scrape_youtube_channel_ids():
                         channel_id = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("navigationEndpoint", {}).get("browseEndpoint", {}).get("browseId", "")
                         if channel_id:
                             channel_name = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("text", "")
-                            channel_age_str = get_channel_age_string(channel_id)  # Fetch channel age string directly from API
-                            channel_ids.append((channel_id, channel_name, channel_age_str))
+                            # Instead of calculating channel age, use a placeholder value
+                            channel_age = -1
+                            channel_ids.append((channel_id, channel_name, channel_age))
 
         logger.info("Channel IDs obtained successfully.")
         return channel_ids[:NUM_CHANNELS_TO_FETCH]  # Limit the number of channels fetched
@@ -181,7 +182,7 @@ def get_channel_age(channel_id):
         return -1  # Return -1 if unable to calculate channel age
 
 
-def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
+def get_channel_videos(channel_id, channel_age, max_results=NUM_VIDEOS_PER_CHANNEL):
     try:
         youtube = build("youtube", "v3", developerKey=API_KEY)
 
@@ -214,6 +215,7 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
                 'viewCount': get_video_stats(video_id),  # Fetch view count
                 'channel': channel_id,
                 'channel_name': item['snippet']['channelTitle'],
+                'channel_age': channel_age,  # Include channel age directly
                 'publishedAt': published_at  # Include published timestamp in video data
             }
             videos.append(video)
@@ -225,6 +227,7 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
     except Exception as e:
         logger.error("Error occurred while fetching videos for channel ID %s: %s", channel_id, str(e))
         return []
+
 
 
 
@@ -301,16 +304,21 @@ if __name__ == "__main__":
             if USE_SAMPLE_DATA:
                 videos_data[channel_id] = generate_sample_data(channel_id)
             else:
-                videos_data[channel_id] = get_channel_videos(channel_id)
+                videos = get_channel_videos(channel_id, channel_age)  # Pass channel_age here
+                if videos:
+                    videos_data[channel_id] = videos
+                else:
+                    logger.error("Failed to fetch videos for channel ID: %s", channel_id)
 
-            # Calculate upload frequency
-            median_frequency, mean_frequency = calculate_upload_frequency(videos_data[channel_id])
+            # Calculate upload frequency if videos are available
+            if channel_id in videos_data:
+                median_frequency, mean_frequency = calculate_upload_frequency(videos_data[channel_id])
 
-            # Add channel age and upload frequency to each video
-            for video in videos_data[channel_id]:
-                video['channel_age'] = channel_age
-                video['median_upload_frequency'] = median_frequency
-                video['mean_upload_frequency'] = mean_frequency
+                # Add channel age and upload frequency to each video
+                for video in videos_data[channel_id]:
+                    video['channel_age'] = channel_age
+                    video['median_upload_frequency'] = median_frequency
+                    video['mean_upload_frequency'] = mean_frequency
 
         # Save videos data to JSON file
         save_data_to_json(videos_data, OUTPUT_JSON_FILE)
@@ -327,3 +335,4 @@ if __name__ == "__main__":
             print(f'Frequency distribution score for Channel {videos[0]["channel_name"]} (ID: {channel_id}): {score}')
     else:
         logger.warning("No channel IDs found. Exiting without saving data to JSON.")
+

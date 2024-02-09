@@ -11,13 +11,14 @@ fetch('video_data.json')
             chartContainer.classList.add('chart-container');
 
             // Calculate channel age and upload frequency
-            const channelAge = videos[0].channel_age;
+            const channelCreationDate = new Date(videos[0].channel_creation_date);
+            const channelAge = calculateChannelAge(channelCreationDate);
             const uploadFrequency = calculateUploadFrequency(videos);
 
             // Include channel age and upload frequency in the chart title
             const chartTitle = document.createElement('div');
             chartTitle.classList.add('chart-title');
-            chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Age: ${channelAge}, Upload Frequency: ${uploadFrequency})`;
+            chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Creation Date: ${channelAge}, Upload Frequency: ${uploadFrequency})`;
 
             const canvas = document.createElement('canvas');
 
@@ -28,6 +29,7 @@ fetch('video_data.json')
             new Chart(canvas, {
                 type: 'bar',
                 data: {
+                    // Truncate video titles if they exceed 10 characters
                     labels: videos.map(video => video.title),
                     datasets: [{
                         label: `View Count Distribution for Channel ${videos[0].channel_name}`,
@@ -38,7 +40,23 @@ fetch('video_data.json')
                     }]
                 },
                 options: {
+                    tooltips: {
+                        callbacks: {
+                            title: function(tooltipItem, data) {
+                                // Return the full video title for the tooltip
+                                return videos[tooltipItem[0].index].title;
+                            }
+                        }
+                    },
                     scales: {
+                        x: {
+                            ticks: {
+                                callback: function(value, index, values) {
+                                    // Truncate x-axis labels if they exceed 10 characters
+                                    return value.length > 10 ? value.substring(0, 10) + '...' : value;
+                                }
+                            }
+                        },
                         y: {
                             beginAtZero: true
                         }
@@ -51,16 +69,26 @@ fetch('video_data.json')
         console.error('Error fetching data:', error);
     });
 
+function calculateChannelAge(creationDate) {
+    // Calculate channel age based on the difference between current date and creation date
+    const currentDate = new Date();
+    const diffYears = currentDate.getFullYear() - creationDate.getFullYear();
+    const diffMonths = currentDate.getMonth() - creationDate.getMonth();
+    if (diffMonths < 0 || (diffMonths === 0 && currentDate.getDate() < creationDate.getDate())) {
+        return `${diffYears - 1} years, ${12 + diffMonths} months`;
+    } else {
+        return `${diffYears} years, ${diffMonths} months`;
+    }
+}
+
 function calculateUploadFrequency(videos) {
     // Calculate upload frequency based on the difference between publish dates
-    const publishDates = videos.map(video => new Date(video.publishedAt));
+    const publishDates = videos.map(video => new Date(video.publishedAt)).sort((a, b) => a - b);
     const timeDifferences = [];
     for (let i = 0; i < publishDates.length - 1; i++) {
-        const diff = Math.abs(publishDates[i] - publishDates[i + 1]);
+        const diff = Math.abs(publishDates[i + 1] - publishDates[i]) / (1000 * 60 * 60 * 24); // convert to days
         timeDifferences.push(diff);
     }
     const averageDiff = timeDifferences.reduce((acc, curr) => acc + curr, 0) / timeDifferences.length;
-    // Convert averageDiff to a human-readable format (e.g., days, months, etc.)
-    // This conversion logic depends on your specific requirements and preferences
-    return averageDiff; // Return the calculated upload frequency
+    return `Avg 1 upload per ${averageDiff.toFixed(2)} days`; // Return the calculated upload frequency
 }
