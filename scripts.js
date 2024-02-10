@@ -17,7 +17,15 @@ fetch('video_data.json')
             // Include channel age and upload frequency in the chart title
             const chartTitle = document.createElement('div');
             chartTitle.classList.add('chart-title');
-            chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Channel Age: ${channelAge}, Upload Frequency: ${uploadFrequency})`;
+
+            // Add channel link
+            const channelLink = document.createElement('a');
+            channelLink.href = videos[0].channel_link;
+            channelLink.textContent = `View Channel: ${videos[0].channel_name}`;
+            channelLink.target = "_blank"; // Open link in a new tab
+            chartTitle.appendChild(channelLink);
+
+            chartTitle.innerHTML += `<br>Channel Age: ${channelAge}, Upload Frequency: ${uploadFrequency}`;
 
             const canvas = document.createElement('canvas');
 

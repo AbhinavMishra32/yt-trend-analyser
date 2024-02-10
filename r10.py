@@ -12,9 +12,9 @@ from googleapiclient.discovery import build
 from colorlog import ColoredFormatter
 
 # Global constants
-NUM_VIDEOS_PER_CHANNEL = 50
+NUM_VIDEOS_PER_CHANNEL = 2
 USE_SAMPLE_DATA = False  # Set to True to use sample data, False to use YouTube API
-NUM_CHANNELS_TO_FETCH = 2  # Limit for the number of channels to fetch
+NUM_CHANNELS_TO_FETCH = 5  # Limit for the number of channels to fetch
 
 # YouTube API key
 API_KEY = "AIzaSyCWCOeo2sRTa_0hB_s9RnR80dgASrjl9dY"
@@ -123,7 +123,8 @@ def scrape_youtube_channel_ids():
                         channel_id = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("navigationEndpoint", {}).get("browseEndpoint", {}).get("browseId", "")
                         if channel_id:
                             channel_name = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("text", "")
-                            channel_ids.append((channel_id, channel_name))
+                            channel_link = f"https://www.youtube.com/channel/{channel_id}"
+                            channel_ids.append((channel_id, channel_name, channel_link))
 
         logger.info("Channel IDs obtained successfully.")
         return channel_ids[:NUM_CHANNELS_TO_FETCH]  # Limit the number of channels fetched
@@ -221,6 +222,7 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
                 'viewCount': get_video_stats(video_id),  # Fetch view count
                 'channel': channel_id,
                 'channel_name': item['snippet']['channelTitle'],
+                'channel_link': f"https://www.youtube.com/channel/{channel_id}",
                 'channel_created_age': channel_created_age,  # Include channel created age
                 'publishedAt': published_at  # Include published timestamp in video data
             }
@@ -284,7 +286,7 @@ if __name__ == "__main__":
     if channel_ids:
         # Fetch videos from selected channels
         videos_data = {}
-        for channel_id, channel_name in channel_ids:
+        for channel_id, channel_name, channel_link in channel_ids:
             if USE_SAMPLE_DATA:
                 videos_data[channel_id] = generate_sample_data(channel_id)
             else:
