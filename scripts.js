@@ -11,14 +11,13 @@ fetch('video_data.json')
             chartContainer.classList.add('chart-container');
 
             // Calculate channel age and upload frequency
-            const channelCreationDate = new Date(videos[0].channel_creation_date);
-            const channelAge = calculateChannelAge(channelCreationDate);
+            const channelAge = calculateChannelAge(videos[0].channel_created_age); // Pass channel age in days
             const uploadFrequency = calculateUploadFrequency(videos);
 
             // Include channel age and upload frequency in the chart title
             const chartTitle = document.createElement('div');
             chartTitle.classList.add('chart-title');
-            chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Creation Date: ${channelAge}, Upload Frequency: ${uploadFrequency})`;
+            chartTitle.textContent = `View Count Distribution for Channel ${videos[0].channel_name} (Channel Age: ${channelAge}, Upload Frequency: ${uploadFrequency})`;
 
             const canvas = document.createElement('canvas');
 
@@ -69,16 +68,13 @@ fetch('video_data.json')
         console.error('Error fetching data:', error);
     });
 
-function calculateChannelAge(creationDate) {
-    // Calculate channel age based on the difference between current date and creation date
-    const currentDate = new Date();
-    const diffYears = currentDate.getFullYear() - creationDate.getFullYear();
-    const diffMonths = currentDate.getMonth() - creationDate.getMonth();
-    if (diffMonths < 0 || (diffMonths === 0 && currentDate.getDate() < creationDate.getDate())) {
-        return `${diffYears - 1} years, ${12 + diffMonths} months`;
-    } else {
-        return `${diffYears} years, ${diffMonths} months`;
-    }
+function calculateChannelAge(channelAgeInDays) {
+    // Calculate channel age in days, months, and years
+    const years = Math.floor(channelAgeInDays / 365);
+    const months = Math.floor((channelAgeInDays % 365) / 30);
+    const days = channelAgeInDays % 30;
+
+    return `${years} years, ${months} months, ${days} days`;
 }
 
 function calculateUploadFrequency(videos) {

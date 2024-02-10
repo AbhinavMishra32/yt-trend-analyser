@@ -12,7 +12,7 @@ from googleapiclient.discovery import build
 from colorlog import ColoredFormatter
 
 # Global constants
-NUM_VIDEOS_PER_CHANNEL = 10
+NUM_VIDEOS_PER_CHANNEL = 50
 USE_SAMPLE_DATA = False  # Set to True to use sample data, False to use YouTube API
 NUM_CHANNELS_TO_FETCH = 2  # Limit for the number of channels to fetch
 
@@ -65,14 +65,19 @@ def calculate_channel_age(channel_id):
         # Attempt to parse the datetime string with microseconds
         creation_date = datetime.datetime.strptime(creation_date_str, "%Y-%m-%dT%H:%M:%S.%fZ").date()
     except ValueError:
-        # If parsing with microseconds fails, try parsing without microseconds
-        creation_date = datetime.datetime.strptime(creation_date_str[:-5], "%Y-%m-%dT%H:%M:%S").date()
+        try:
+            # If parsing with microseconds fails, try parsing without microseconds
+            creation_date = datetime.datetime.strptime(creation_date_str[:-5], "%Y-%m-%dT%H:%M:%S").date()
+        except ValueError as e:
+            logger.error("Failed to parse creation date string: %s", str(e))
+            return -1
 
     # Calculate channel age
     current_date = datetime.date.today()
     channel_age_days = (current_date - creation_date).days
 
     return channel_age_days
+
 
 
 def scrape_youtube_channel_ids():
@@ -118,9 +123,7 @@ def scrape_youtube_channel_ids():
                         channel_id = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("navigationEndpoint", {}).get("browseEndpoint", {}).get("browseId", "")
                         if channel_id:
                             channel_name = video_renderer.get("longBylineText", {}).get("runs", [])[0].get("text", "")
-                            # Instead of calculating channel age, use a placeholder value
-                            channel_age = -1
-                            channel_ids.append((channel_id, channel_name, channel_age))
+                            channel_ids.append((channel_id, channel_name))
 
         logger.info("Channel IDs obtained successfully.")
         return channel_ids[:NUM_CHANNELS_TO_FETCH]  # Limit the number of channels fetched
@@ -182,9 +185,12 @@ def get_channel_age(channel_id):
         return -1  # Return -1 if unable to calculate channel age
 
 
-def get_channel_videos(channel_id, channel_age, max_results=NUM_VIDEOS_PER_CHANNEL):
+def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
     try:
         youtube = build("youtube", "v3", developerKey=API_KEY)
+
+        # Fetch channel created age
+        channel_created_age = calculate_channel_age(channel_id)
 
         # Fetch videos from the channel
         if FETCH_ORDER == FETCH_ORDER_FIRST_TO_LAST:
@@ -215,7 +221,7 @@ def get_channel_videos(channel_id, channel_age, max_results=NUM_VIDEOS_PER_CHANN
                 'viewCount': get_video_stats(video_id),  # Fetch view count
                 'channel': channel_id,
                 'channel_name': item['snippet']['channelTitle'],
-                'channel_age': channel_age,  # Include channel age directly
+                'channel_created_age': channel_created_age,  # Include channel created age
                 'publishedAt': published_at  # Include published timestamp in video data
             }
             videos.append(video)
@@ -227,8 +233,6 @@ def get_channel_videos(channel_id, channel_age, max_results=NUM_VIDEOS_PER_CHANN
     except Exception as e:
         logger.error("Error occurred while fetching videos for channel ID %s: %s", channel_id, str(e))
         return []
-
-
 
 
 def get_video_stats(video_id):
@@ -248,26 +252,6 @@ def get_video_stats(video_id):
         return 0
     
 
-def calculate_upload_frequency(videos):
-    upload_dates = [video['publishedAt'] for video in videos]
-    upload_dates.sort(reverse=True)  # Sort in descending order to calculate frequency
-    upload_intervals = []
-    
-    for i in range(len(upload_dates) - 1):
-        if 'channel_age' not in videos[i]:
-            print(f"Skipping channel without channel_age: {videos[i]['channel']}")
-            continue  # Skip this iteration if 'channel_age' is missing
-        
-        interval = videos[i]['channel_age']
-        upload_intervals.append(interval)
-
-    median_frequency = None
-    mean_frequency = None
-    if upload_intervals:
-        median_frequency = upload_intervals[len(upload_intervals) // 2] if len(upload_intervals) % 2 != 0 else (upload_intervals[len(upload_intervals) // 2] + upload_intervals[len(upload_intervals) // 2 - 1]) / 2
-        mean_frequency = sum(upload_intervals) / len(upload_intervals)
-
-    return median_frequency, mean_frequency
 
 
 def generate_sample_data(channel_id):
@@ -300,25 +284,15 @@ if __name__ == "__main__":
     if channel_ids:
         # Fetch videos from selected channels
         videos_data = {}
-        for channel_id, channel_name, channel_age in channel_ids:
+        for channel_id, channel_name in channel_ids:
             if USE_SAMPLE_DATA:
                 videos_data[channel_id] = generate_sample_data(channel_id)
             else:
-                videos = get_channel_videos(channel_id, channel_age)  # Pass channel_age here
+                videos = get_channel_videos(channel_id)  # Removed channel_age
                 if videos:
                     videos_data[channel_id] = videos
                 else:
                     logger.error("Failed to fetch videos for channel ID: %s", channel_id)
-
-            # Calculate upload frequency if videos are available
-            if channel_id in videos_data:
-                median_frequency, mean_frequency = calculate_upload_frequency(videos_data[channel_id])
-
-                # Add channel age and upload frequency to each video
-                for video in videos_data[channel_id]:
-                    video['channel_age'] = channel_age
-                    video['median_upload_frequency'] = median_frequency
-                    video['mean_upload_frequency'] = mean_frequency
 
         # Save videos data to JSON file
         save_data_to_json(videos_data, OUTPUT_JSON_FILE)
@@ -335,4 +309,3 @@ if __name__ == "__main__":
             print(f'Frequency distribution score for Channel {videos[0]["channel_name"]} (ID: {channel_id}): {score}')
     else:
         logger.warning("No channel IDs found. Exiting without saving data to JSON.")
-
