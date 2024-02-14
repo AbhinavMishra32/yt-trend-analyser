@@ -12,9 +12,9 @@ from googleapiclient.discovery import build
 from colorlog import ColoredFormatter
 
 # Global constants
-NUM_VIDEOS_PER_CHANNEL = 2
+NUM_VIDEOS_PER_CHANNEL = 3
 USE_SAMPLE_DATA = False  # Set to True to use sample data, False to use YouTube API
-NUM_CHANNELS_TO_FETCH = 5  # Limit for the number of channels to fetch
+NUM_CHANNELS_TO_FETCH = 2 # Limit for the number of channels to fetch
 
 # YouTube API key
 API_KEY = "AIzaSyCWCOeo2sRTa_0hB_s9RnR80dgASrjl9dY"
@@ -190,8 +190,9 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
     try:
         youtube = build("youtube", "v3", developerKey=API_KEY)
 
-        # Fetch channel created age
+        # Fetch channel created age and subscriber count
         channel_created_age = calculate_channel_age(channel_id)
+        channel_subscriber_count = get_channel_subscriber_count(channel_id)
 
         # Fetch videos from the channel
         if FETCH_ORDER == FETCH_ORDER_FIRST_TO_LAST:
@@ -217,6 +218,7 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
             video_id = item['id']['videoId']
             published_at = item['snippet']['publishedAt'][:-1]  # Remove the last character (microseconds indicator)
             logger.info(f"Fetching video {index + 1} for channel {channel_id}: {video_title} (ID: {video_id})")
+            video_link = f"https://www.youtube.com/watch?v={video_id}"  # Construct video link
             video = {
                 'title': video_title,
                 'viewCount': get_video_stats(video_id),  # Fetch view count
@@ -224,7 +226,9 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
                 'channel_name': item['snippet']['channelTitle'],
                 'channel_link': f"https://www.youtube.com/channel/{channel_id}",
                 'channel_created_age': channel_created_age,  # Include channel created age
-                'publishedAt': published_at  # Include published timestamp in video data
+                'channel_subscriber_count': channel_subscriber_count,  # Include subscriber count
+                'publishedAt': published_at,  # Include published timestamp in video data
+                'video_link': video_link  # Include video link
             }
             videos.append(video)
 
@@ -235,6 +239,7 @@ def get_channel_videos(channel_id, max_results=NUM_VIDEOS_PER_CHANNEL):
     except Exception as e:
         logger.error("Error occurred while fetching videos for channel ID %s: %s", channel_id, str(e))
         return []
+
 
 
 def get_video_stats(video_id):
@@ -253,7 +258,21 @@ def get_video_stats(video_id):
         logger.error("Error occurred while fetching statistics for video ID %s: %s", video_id, str(e))
         return 0
     
+def get_channel_subscriber_count(channel_id):
+    try:
+        youtube = build("youtube", "v3", developerKey=API_KEY)
 
+        # Fetch channel details
+        request = youtube.channels().list(
+            part="statistics",
+            id=channel_id
+        )
+        response = request.execute()
+
+        return int(response['items'][0]['statistics']['subscriberCount'])
+    except Exception as e:
+        logger.error("Error occurred while fetching subscriber count for channel ID %s: %s", channel_id, str(e))
+        return 0
 
 
 def generate_sample_data(channel_id):
@@ -290,24 +309,23 @@ if __name__ == "__main__":
             if USE_SAMPLE_DATA:
                 videos_data[channel_id] = generate_sample_data(channel_id)
             else:
-                videos = get_channel_videos(channel_id)  # Removed channel_age
-                if videos:
-                    videos_data[channel_id] = videos
+                # Fetch subscriber count for the channel
+                channel_subscriber_count = get_channel_subscriber_count(channel_id)
+                if channel_subscriber_count:
+                    # Fetch videos for the channel
+                    videos = get_channel_videos(channel_id)  # Removed channel_age
+                    if videos:
+                        videos_data[channel_id] = {
+                            'video': videos,
+                            'subscriber_count': channel_subscriber_count  # Include subscriber count
+                        }
+                    else:
+                        logger.error("Failed to fetch videos for channel ID: %s", channel_id)
                 else:
-                    logger.error("Failed to fetch videos for channel ID: %s", channel_id)
+                    logger.error("Failed to fetch subscriber count for channel ID: %s", channel_id)
 
         # Save videos data to JSON file
         save_data_to_json(videos_data, OUTPUT_JSON_FILE)
-
-        # Perform frequency distribution analysis
-        for channel_id, videos in videos_data.items():
-            view_counts = [video['viewCount'] for video in videos]
-            max_views = max(view_counts)
-            score = 0
-            for views in view_counts:
-                if views > max_views:
-                    score += 1
-                    max_views = views
-            print(f'Frequency distribution score for Channel {videos[0]["channel_name"]} (ID: {channel_id}): {score}')
     else:
         logger.warning("No channel IDs found. Exiting without saving data to JSON.")
+
