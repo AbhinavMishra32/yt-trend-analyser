@@ -12,12 +12,12 @@ from googleapiclient.discovery import build
 from colorlog import ColoredFormatter
 
 # Global constants
-NUM_VIDEOS_PER_CHANNEL = 3
+NUM_VIDEOS_PER_CHANNEL = 1
 USE_SAMPLE_DATA = False  # Set to True to use sample data, False to use YouTube API
-NUM_CHANNELS_TO_FETCH = 2 # Limit for the number of channels to fetch
+NUM_CHANNELS_TO_FETCH = 5 # Limit for the number of channels to fetch
 
 # YouTube API key
-API_KEY = "AIzaSyCWCOeo2sRTa_0hB_s9RnR80dgASrjl9dY"
+API_KEY = os.environ.get('YOUTUBE_API_KEY_1')
 
 # Fetch order options
 FETCH_ORDER_FIRST_TO_LAST = "first_to_last"
