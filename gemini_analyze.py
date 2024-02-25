@@ -4,12 +4,12 @@ import json
 import os
 import google.generativeai as genai
 from pprint import pprint
-from dotenv import load_dotenv
+# from dotenv import load_dotenv
 
 from IPython.display import display
 from IPython.display import Markdown
 
-load_dotenv()
+# load_dotenv()
 
 def to_markdown(text):
   text = text.replace('•', '  *')
