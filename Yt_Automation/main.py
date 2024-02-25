@@ -1,16 +1,16 @@
 import subprocess
 
 # Create script of video
-subprocess.call(["python3", "gemini_script.py"])
+print(subprocess.check_output(["python3", "scripts/gemini_script.py"]).decode())
 
 # Create audio for the script
-subprocess.call(["python3", "eleven_labs_api.py"])
+print(subprocess.check_output(["python3", "scripts/eleven_labs_api.py"]).decode())
 
 # Create images from video
-subprocess.call(["python3", "extract_frames.py"])
+print(subprocess.check_output(["python3", "scripts/extract_frames.py"]).decode())
 
 # Create slideshow from images
-subprocess.call(["python3", "slideshow_maker.py"])
+print(subprocess.check_output(["python3", "scripts/slideshow_maker.py"]).decode())
 
 # Combine audio and video
-subprocess.call(["python3", "combine_audio_video.py"])
+print(subprocess.check_output(["python3", "scripts/combine_audio_video.py"]).decode())
