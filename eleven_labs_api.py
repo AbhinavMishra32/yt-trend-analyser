@@ -1,25 +1,10 @@
-import requests
+from elevenlabs import generate, play
 
-url = "https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+audio = generate(
+  api_key="3f12eb2b53e2a8a5ad0dd7be0624f9d9", #(Defaults to os.getenv(ELEVEN_API_KEY))
+  text="शैतान 2024: रोमांच का शिकार या बुरे सपने का शिकंजा? (लगभग 10 मिनट)",
+  voice="Rachel",
+  model="eleven_multilingual_v2"
+)
 
-payload = {
-    "model_id": "<string>",
-    "pronunciation_dictionary_locators": [
-        {
-            "pronunciation_dictionary_id": "<string>",
-            "version_id": "<string>"
-        }
-    ],
-    "text": "<string>",
-    "voice_settings": {
-        "similarity_boost": 123,
-        "stability": 123,
-        "style": 123,
-        "use_speaker_boost": True
-    }
-}
-headers = {"Content-Type": "application/json"}
-
-response = requests.request("POST", url, json=payload, headers=headers)
-
-print(response.text)
+play(audio)
