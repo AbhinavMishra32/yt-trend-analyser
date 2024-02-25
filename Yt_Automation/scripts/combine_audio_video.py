@@ -2,13 +2,13 @@ import os
 from moviepy.editor import VideoFileClip, AudioFileClip, concatenate_audioclips, CompositeAudioClip
 
 # Load video
-video = VideoFileClip("../slideshow.mp4")
+video = VideoFileClip("slideshow.mp4")
 
 # Load main audio (voice of the person)
-main_audio = AudioFileClip("../script_audio.mp3")
+main_audio = AudioFileClip("script_audio.mp3")
 
 # Set the background music folder
-background_music_folder = "../background_music"
+background_music_folder = "background_music"
 
 # Get all the MP3 files in the background music folder
 background_music_files = [os.path.join(background_music_folder, f) for f in os.listdir(background_music_folder) if f.endswith('.mp3')]
@@ -35,4 +35,4 @@ video = video.set_audio(combined_audio)
 print("Video duration:", video.duration)
 
 # Write the result to a file
-video.write_videofile("output.mp4")
+video.write_videofile("Final_Video.mp4")

@@ -8,9 +8,9 @@ with open('video_script.txt', 'r') as f:
     total_chars = len(f.read())  # Calculate the total number of characters in the file
     f.seek(0)  # Move the file pointer back to the beginning of the file
     chars_read = 0  # Initialize a counter for the number of characters read
-    for i in range(0,3): # for limited script
-    #while True: # for the entire script
-        piece_length = 100
+    # for i in range(0,3): # for limited script
+    while True: # for the entire script
+        piece_length = 1000
         piece = f.read(piece_length)
         if not piece:
             break
