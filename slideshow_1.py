@@ -19,7 +19,8 @@ output_video = "/Users/abhinavmishra/Documents/automated_video.mp4"
 image_files = [os.path.join(image_folder, file) for file in os.listdir(image_folder) if file.endswith('.jpg')]
 
 # Generate random duration and zoom effect
-duration = generate_random_duration()
+# duration = generate_random_duration()
+duration = 3
 zoom_start, zoom_end = generate_random_zoom_effect()
 
 # Specify desired resolution
