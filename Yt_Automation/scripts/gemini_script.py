@@ -1,7 +1,7 @@
 import google.generativeai as genai
 import os
 
-movie_name = "Shaitaan 2024"
+movie_name = "Deadpool 3"
 
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 if not GOOGLE_API_KEY:

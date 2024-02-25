@@ -1,6 +1,19 @@
 import cv2
 import os
-import youtube_dl
+import tempfile
+from pytube import YouTube
+import shutil
+
+def download_youtube_video(video_url, output_path):
+    """
+    Downloads a YouTube video.
+
+    Parameters:
+        video_url (str): URL of the YouTube video.
+        output_path (str): Path where the video will be saved.
+    """
+    yt = YouTube(video_url)
+    yt.streams.filter(file_extension='mp4').first().download(output_path)
 
 def extract_frames(video_path, output_folder, interval):
     """
@@ -17,10 +30,11 @@ def extract_frames(video_path, output_folder, interval):
 
     if video_path.startswith("http"):  # If video_path is a YouTube link
         # Download YouTube video
-        ydl_opts = {'outtmpl': 'temp_video.mp4'}
-        with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-            ydl.download([video_path])
-        video_path = 'temp_video.mp4'
+        with tempfile.TemporaryDirectory() as temp_dir:
+            download_youtube_video(video_path, temp_dir)
+            temp_video_path = os.path.join(temp_dir, os.listdir(temp_dir)[0])
+            shutil.copy(temp_video_path, os.path.join(output_folder, 'temp_video.mp4'))
+            video_path = os.path.join(output_folder, 'temp_video.mp4')
 
     # Open the video file
     video_capture = cv2.VideoCapture(video_path)
@@ -52,12 +66,12 @@ def extract_frames(video_path, output_folder, interval):
     video_capture.release()
 
     # Remove temporary video file if it was downloaded
-    if video_path == 'temp_video.mp4':
-        os.remove('temp_video.mp4')
+    if video_path == os.path.join(output_folder, 'temp_video.mp4'):
+        os.remove(os.path.join(output_folder, 'temp_video.mp4'))
 
 # Example usage:
-# video_path = "https://www.youtube.com/watch?v=dQw4w9WgXcQ"  # YouTube video link
-video_path = "Shaitaan Trailer | Ajay Devgn, R Madhavan, Jyotika | Jio Studios, Devgn Films, Panorama Studios.mp4"  # Path to local video file
+video_path = "https://www.youtube.com/watch?v=uJMCNJP2ipI"  # YouTube video link
+# Or video_path = "local_video.mp4"  # Path to local video file
 output_folder = "output_frames"
 interval = 10  # Interval in seconds
 extract_frames(video_path, output_folder, interval)
