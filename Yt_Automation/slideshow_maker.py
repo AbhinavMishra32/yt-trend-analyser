@@ -7,6 +7,7 @@ import moviepy.editor as mp
 import math
 from PIL import Image
 import numpy
+import eyed3
 
 def extract_frames(video_path, output_folder, interval):
     """
@@ -105,13 +106,19 @@ def create_slideshow(images_folder, image_duration, total_duration):
     
     return mp.concatenate_videoclips(clips)
 
+def get_mp3_duration(file_path):
+    audiofile = eyed3.load(file_path)
+    duration_sec = audiofile.info.time_secs
+    return duration_sec
+
+
 # Parameters
 video_path = "Shaitaan Trailer | Ajay Devgn, R Madhavan, Jyotika | Jio Studios, Devgn Films, Panorama Studios.mp4"
 output_folder = "output_frames"
 interval = 10  # Interval in seconds
 images_folder = "output_frames"  # Folder containing extracted frames
 image_duration = 10  # Duration for each image in seconds
-total_duration = 20  # Total duration of the video in seconds
+total_duration = get_mp3_duration("script_audio.mp3") # Total duration of the video in seconds
 output_file = "slideshow.mp4"  # Output file name
 resolution = (1280, 720)  # Default resolution
 
