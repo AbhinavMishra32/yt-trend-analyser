@@ -70,7 +70,7 @@ def extract_frames(video_path, output_folder, interval):
         os.remove(os.path.join(output_folder, 'temp_video.mp4'))
 
 # Example usage:
-video_path = "https://www.youtube.com/watch?v=uJMCNJP2ipI"  # YouTube video link
+video_path = "https://www.youtube.com/watch?v=8xjSvwi7W-0"  # YouTube video link
 # Or video_path = "local_video.mp4"  # Path to local video file
 output_folder = "output_frames"
 interval = 10  # Interval in seconds
