@@ -35,4 +35,4 @@ video = video.set_audio(combined_audio)
 print("Video duration:", video.duration)
 
 # Write the result to a file
-video.write_videofile("Final_Video.mp4")
+video.write_videofile("sub_video.mp4", fps=24, codec='libx264', threads=4, verbose=False, audio_codec ="aac")

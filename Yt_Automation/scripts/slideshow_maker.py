@@ -1,55 +1,30 @@
 """
 Gets script from Google Gemini Pro and creates a slideshow from the video frames, connects trailer to the slideshow and exports the final video.
 """
-import cv2
 import os
 import moviepy.editor as mp
 import math
 from PIL import Image
 import numpy
-import eyed3
+from mutagen.mp3 import MP3
+import itertools
 
-def extract_frames(video_path, output_folder, interval):
+def extract_frames(output_folder):
     """
-    Extracts still frames from a video at specified intervals.
+    Retrieves existing image files from a folder.
 
     Parameters:
-        video_path (str): Path to the input video file.
-        output_folder (str): Path to the folder where extracted frames will be saved.
-        interval (int): Interval (in seconds) between extracted frames.
+        output_folder (str): Path to the folder containing image files.
+
+    Returns:
+        List: A list of image file paths.
     """
-    # Create output folder if it doesn't exist
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
+    # List all image files in the output folder
+    images = [f for f in os.listdir(output_folder) if not f.startswith('.') and f.endswith('.jpg')]
 
-    # Open the video file
-    video_capture = cv2.VideoCapture(video_path)
-    fps = video_capture.get(cv2.CAP_PROP_FPS)
-    frame_count = int(video_capture.get(cv2.CAP_PROP_FRAME_COUNT))
+    # Return the list of image file paths
+    return [os.path.join(output_folder, image) for image in images]
 
-    # Calculate frame interval based on the desired time interval
-    frame_interval = int(interval * fps)
-
-    # Read and save frames at specified intervals
-    frame_number = 0
-    while True:
-        # Set frame position
-        video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
-        ret, frame = video_capture.read()
-        if not ret:
-            break
-
-        # Save frame
-        output_path = os.path.join(output_folder, f"frame_{frame_number}.jpg")
-        cv2.imwrite(output_path, frame)
-
-        # Move to the next frame based on the interval
-        frame_number += frame_interval
-        if frame_number >= frame_count:
-            break
-
-    # Release video capture object
-    video_capture.release()
 
 def zoom_in_effect(clip, zoom_ratio=0.04):
     def effect(get_frame, t):
@@ -84,52 +59,56 @@ def zoom_in_effect(clip, zoom_ratio=0.04):
     return clip.fl(effect)
 
 
-def create_slideshow(images_folder, image_duration, total_duration):
-    """Create a slideshow from images in a folder."""
+def create_slideshow(image_files, image_duration, total_duration):
+    """Create a slideshow from image files."""
     clips = []
-    images = [f for f in os.listdir(images_folder) if not f.startswith('.')]  # Filter out hidden files
     total_duration_remaining = total_duration
-    while total_duration_remaining > 0:
-        for image in images:
-            image_path = os.path.join(images_folder, image)
+    for image_path in itertools.cycle(image_files):
+        # If this is the last image, adjust its duration so that the total duration matches the desired length
+        if total_duration_remaining < image_duration:
+            image_duration = total_duration_remaining
 
-            # Load as a MoviePy clip
-            clip = mp.ImageClip(image_path).set_duration(image_duration)  
+        # Load image file as a MoviePy clip
+        clip = mp.ImageClip(image_path).set_duration(image_duration)
 
-            # Apply the zoom effect
-            slide = zoom_in_effect(clip, zoom_ratio=0.04) 
+        # Apply the zoom effect
+        slide = zoom_in_effect(clip, zoom_ratio=0.04)
 
-            clips.append(slide)
-            total_duration_remaining -= image_duration
-            if total_duration_remaining <= 0:
-                break
+        clips.append(slide)
+        total_duration_remaining -= image_duration
+        if total_duration_remaining <= 0:
+            break
     
     return mp.concatenate_videoclips(clips)
 
+
 def get_mp3_duration(file_path):
-    audiofile = eyed3.load(file_path)
-    duration_sec = audiofile.info.time_secs
+    audio = MP3(file_path)
+    duration_sec = audio.info.length
     return duration_sec
 
 
 # Parameters
-video_path = "Shaitaan Trailer | Ajay Devgn, R Madhavan, Jyotika | Jio Studios, Devgn Films, Panorama Studios.mp4"
-output_folder = "output_frames"
-interval = 10  # Interval in seconds
 images_folder = "output_frames"  # Folder containing extracted frames
-image_duration = 10  # Duration for each image in seconds
 total_duration = get_mp3_duration("script_audio.mp3") # Total duration of the video in seconds
 output_file = "slideshow.mp4"  # Output file name
 resolution = (1280, 720)  # Default resolution
 
-# Extract frames from the video
-extract_frames(video_path, output_folder, interval)
-
 # Create slideshow from extracted frames
-slideshow = create_slideshow(images_folder, image_duration, total_duration)
+frame_files = extract_frames(images_folder)
+
+# Calculate image_duration based on total_duration and number of images
+image_duration = total_duration / len(frame_files)
+
+slideshow = create_slideshow(frame_files, image_duration, total_duration)
 
 # Set video resolution
-slideshow = slideshow.resize(resolution)
+slideshow = slideshow.resize(resolution) #type: ignore
 
 # Export slideshow to a file with specified codec, threads, and resolution
-slideshow.write_videofile(output_file, fps=24, codec='libx264', threads=4, verbose=False)
+slideshow.write_videofile(output_file, fps=24, codec='libx264', threads=4, verbose=False, audio_codec ="aac")
+
+# Delete the frames folder
+# for file in os.listdir(images_folder):
+#     file_path = os.path.join(images_folder, file)
+#     os.remove(file_path)
