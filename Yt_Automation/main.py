@@ -1,7 +1,7 @@
 import subprocess
 
-movie_name = "Tera Kya Hoga Lovely Randeep Hooda, Ileana D’cruz | Releasing on 8th March 2024"
-video_url = "https://www.youtube.com/watch?v=TXmYkbs3zy0"
+movie_name = "Ra one 2 2024"
+video_url = "https://www.youtube.com/watch?v=-05HzY1erR0"
 images_count = 20
 
 # Define the pipeline steps with step numbers

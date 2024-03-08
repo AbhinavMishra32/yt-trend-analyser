@@ -22,13 +22,13 @@ def move_files(src_folder, dest_folder):
         if filename.endswith(".wav"):  # Only move .wav files
             old_file_path = os.path.join(src_folder, filename)
             new_file_path = os.path.join(dest_folder, filename)
-            print(f"Moving {old_file_path} to {new_file_path}")
+            # print(f"Moving {old_file_path} to {new_file_path}")
             shutil.move(old_file_path, new_file_path)
-            print(f"File moved successfully!")
+    print(f"Files moved successfully!")
 
 
 if __name__ == "__main__":
-    playlist = "https://open.spotify.com/playlist/0ImagdvyR7gns66x3Di0wB?si=0cd1cde29a674f4d"
+    playlist = "https://open.spotify.com/track/3GEiVoaUXq468gfYs2EPfh?si=bfcd9f15dca348f7"
 
     download(playlist) #downloading the lofi playlist from spotify
     songs_folder = "drakify/source/songs/normal_songs/" #normal songs folder path

@@ -27,3 +27,10 @@ video_with_watermark = CompositeVideoClip([video_clip, watermark.set_position(wa
 # Save the edited video
 video_with_watermark.write_videofile("output_video_with_watermark.mp4")
 ---------------
+
+
+
+
+
+7 march onwards: 
+have done the video audio, now start from extract frames script, (animal movie)
