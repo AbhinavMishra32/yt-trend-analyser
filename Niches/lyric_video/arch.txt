@@ -1,3 +1,4 @@
 1. get lrc from any method
 2. convert lrc to srt file
 3. stretch the srt file with slowed+reverb music
+4. use the srt in premiere pro

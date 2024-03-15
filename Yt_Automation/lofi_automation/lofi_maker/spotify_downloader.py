@@ -28,7 +28,7 @@ def move_files(src_folder, dest_folder):
 
 
 if __name__ == "__main__":
-    playlist = "https://open.spotify.com/track/3GEiVoaUXq468gfYs2EPfh?si=bfcd9f15dca348f7"
+    playlist = "https://open.spotify.com/track/6dUGQzqCA18wKzVuiGttJF?si=bace7b4bbbc940fd"
 
     download(playlist) #downloading the lofi playlist from spotify
     songs_folder = "drakify/source/songs/normal_songs/" #normal songs folder path
