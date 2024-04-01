@@ -108,9 +108,9 @@ def download_thumbnail(video_url, output_folder):
         thumbnail_file.write(requests.get(thumbnail_url).content)
 
 if __name__ == "__main__":
-    # if len(sys.argv) < 3:
-    #     print("Please provide the video path and images_count as command-line arguments.")
-    #     sys.exit(1)
+    if len(sys.argv) < 3:
+        print("Please provide the video path and images_count as command-line arguments.")
+        sys.exit(1)
 
     # Example usage:
     video_path = sys.argv[1]  # YouTube video link or path to local video file
@@ -120,6 +120,7 @@ if __name__ == "__main__":
     title_file_path = "output_frames/thumbnail/video_title.txt"
 
     images_count = int(sys.argv[2])  # Number of frames/images to extract from the video
+    # images_count = 30
     extract_frames(video_path, output_folder, images_count)
     # download_thumbnail(video_path, thumbnail_folder)
     # save_video_title(video_path, title_file_path)

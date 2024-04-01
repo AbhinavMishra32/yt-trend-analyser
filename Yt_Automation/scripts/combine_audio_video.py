@@ -14,7 +14,7 @@ background_music_folder = "background_music"
 background_music_files = [os.path.join(background_music_folder, f) for f in os.listdir(background_music_folder) if f.endswith('.mp3')]
 
 # Load background music files, adjust the volume, and concatenate
-background_music_clips = [AudioFileClip(music).volumex(0.05) for music in background_music_files]  # Adjust the volume as needed
+background_music_clips = [AudioFileClip(music).volumex(0.03) for music in background_music_files]  # Adjust the volume as needed
 background_music = concatenate_audioclips(background_music_clips)
 
 # Make the background music match the duration of the main audio

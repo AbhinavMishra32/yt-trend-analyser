@@ -11,9 +11,10 @@ from elevenlabs.api.error import APIError
 from pydub import AudioSegment
 import io
 from termcolor import colored
+from elevenlabs_unleashed.src.elevenlabs_unleashed.tts import UnleashedTTS
 
 api_keys = []  # List to store the API keys
-
+tts = UnleashedTTS(nb_accounts=2, create_accounts_threads=1)
 # Read the API keys from the text file
 with open('scripts/api_keys.txt', 'r') as f:
     api_keys = [line.strip() for line in f.readlines()]
@@ -34,15 +35,24 @@ with open('video_script.txt', 'r') as f:
         chars_read += len(piece)  # Update the number of characters read
 
         try:
-            audio = generate(
-                api_key=api_keys[api_key_index],  # Use the current api_key
-                text=piece,
+            # audio = generate(
+            #     api_key=api_keys[api_key_index],  # Use the current api_key
+            #     text=piece,
+            #     voice="Alice",
+            #     model="eleven_multilingual_v2"
+            # )
+            audio = tts.speak(  # Use the current api_key
+                piece,
                 voice="Alice",
-                model="eleven_multilingual_v2"
+                model="eleven_multilingual_v2",
+                save = True
             )
         except RateLimitError as e:
             print("Rate limit exceeded. Switching to another API key...")
             api_keys[api_key_index] = "exhausted:" + api_keys[api_key_index]  # Mark the key as exhausted
+            # Open the file in append mode and write the exhausted key
+            # with open('scripts/api_keys.txt', 'a') as key_file:
+            #     key_file.write("exhausted:" + api_keys[api_key_index] + "\n")
             api_key_index = (api_key_index + 1) % len(api_keys)  # Switch to the next api_key
             continue
 

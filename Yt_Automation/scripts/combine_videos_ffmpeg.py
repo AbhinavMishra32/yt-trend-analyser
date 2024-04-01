@@ -52,8 +52,8 @@ def main():
     output_video = "combined_video.mp4"
     
     # Minimum and maximum duration for the final video (in seconds)
-    min_duration = 6400 # 1.777 hours
-    max_duration = 8400  # 2.333 hours
+    min_duration = 7900 # 2.194 hours
+    max_duration = 11500 # 3.194 hours
     
     # Repeat the input video to create the final video
     repeat_video(input_video, output_video, min_duration, max_duration)

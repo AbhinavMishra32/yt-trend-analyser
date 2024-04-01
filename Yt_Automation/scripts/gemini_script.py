@@ -69,7 +69,7 @@ with open(script_file, 'w') as f:  # Write initial response to the script file
 
 # Continue the script
 
-for _ in range(4):  # Adjust this number based on how many times you want to continue the script
+for _ in range(3):  # Adjust this number based on how many times you want to continue the script
     print("Iteration:", _)
     
     # Access and store the latest script content
