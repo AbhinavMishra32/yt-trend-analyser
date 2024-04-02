@@ -1,0 +1,11 @@
+{
+  version: 1,
+  mediaFileName: 'looped_video.mp4',
+  cutSegments: [
+    {
+      start: 0,
+      end: 509.952,
+      name: 'Tempo: 120.0',
+    },
+  ],
+}
