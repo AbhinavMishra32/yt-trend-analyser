@@ -128,3 +128,4 @@ cython_debug/
 *.mov
 *.mp4
 ./Yt_Automation/lofi_automation/lofi_maker/drakify
+Niches/ai_mashup/mashup.wav
